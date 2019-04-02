@@ -36,7 +36,8 @@ function follow_the_light()
   if not seeing_some_light() then
     wander()
   else
-    log("I see the light!")
+    log("I see the light! ")
+    log("Brightest sensor value: " .. get_brightest_light_sensor().value)
   end
 end
 
@@ -48,3 +49,13 @@ function seeing_some_light()
   end
   return false
 end
+
+function get_brightest_light_sensor()
+  brightest = null
+  for _, light_sensor in pairs(robot.light) do
+    if brightest == null or light_sensor.value >= brightest.value then 
+      brightest = light_sensor
+    end
+  end
+  return brightest
+end  
