@@ -1,5 +1,6 @@
 MAX_WHEEL_SPEED = 10
 MOVE_STEPS = 10
+PROXIMITY_THRESHOLD = 0.5
 n_steps = 0
 
 function init()
@@ -58,4 +59,22 @@ function get_brightest_light_sensor()
     end
   end
   return brightest
-end  
+end
+
+function going_to_crash()
+  for _, proximity_sensor in pairs(robot.proximity) do
+    if proximity_sensor.value > PROXIMITY_THRESHOLD then return true end
+  end
+  return false
+end
+
+function get_nearest_proximity_sensor()
+  nearest = null
+  for _, proximity_sensor in pairs(robot.light) do
+    if nearest == null or proximity_sensor.value >= nearest.value then 
+      nearest = proximity_sensor
+    end
+  end
+  return nearest
+end
+  
