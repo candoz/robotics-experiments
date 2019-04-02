@@ -33,6 +33,9 @@ function wander()
   robot.wheels.set_velocity(robot.random.uniform(10), robot.random.uniform(10))
 end
 
+function avoid_collision()
+  
+
 function follow_the_light()
   if not seeing_some_light() then
     wander()
@@ -61,20 +64,13 @@ function get_brightest_light_sensor()
   return brightest
 end
 
-function going_to_crash()
+function sensing_obstacles_ahead()
   for _, proximity_sensor in pairs(robot.proximity) do
-    if proximity_sensor.value > PROXIMITY_THRESHOLD then return true end
+    value = proximity_sensor.value
+    angle = proximity_sensor.angle
+    if value >= PROXIMITY_THRESHOLD and ( angle > math.pi/4 and angle < math.pi*3/4 ) then 
+      return true 
+    end
   end
   return false
 end
-
-function get_nearest_proximity_sensor()
-  nearest = null
-  for _, proximity_sensor in pairs(robot.light) do
-    if nearest == null or proximity_sensor.value >= nearest.value then 
-      nearest = proximity_sensor
-    end
-  end
-  return nearest
-end
-  
