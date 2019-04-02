@@ -33,19 +33,30 @@ function wander()
   robot.wheels.set_velocity(robot.random.uniform(10), robot.random.uniform(10))
 end
 
-function avoid_collision()
-  
-
 function follow_the_light()
   if not seeing_some_light() then
+    log("I'm in the dark :(")
     wander()
   else
-    log("I see the light! ")
-    log("Brightest sensor value: " .. get_brightest_light_sensor().value)
+    light_direction = get_brightest_light_sensor().angle
+    if between(light_direction, math.pi/2, math.pi) then sign_l = -1 else sign_l = 1 end
+    if between(light_direction, math.pi, math.pi*3/2) then sign_r = -1 else sign_r = 1 end
+    mod_l = 1 - math.sin(light_direction)
+    mod_r = 1 + math.sin(light_direction)
+    k_norm = MAX_WHEEL_SPEED / math.max(mod_l, mod_r)
+    speed_l = sign_l * mod_l * k_norm
+    speed_r = sign_r * mod_r * k_norm
+    robot.wheels.set_velocity(speed_l, speed_r)
   end
 end
 
+
 -- Utils:
+
+function between(value, min, max)
+  if value > min and value < max then return true end
+  return false
+end
 
 function seeing_some_light()
   for _, light_sensor in pairs(robot.light) do
