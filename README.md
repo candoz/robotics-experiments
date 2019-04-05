@@ -3,7 +3,7 @@
 ## About the course
 These are my lab experiments from the Intelligent Robotics Systems course by professor Andrea Roli.
 
-Link to the course: https://www.unibo.it/it/didattica/insegnamenti/insegnamento/2018/384267
+Link to the course: https://www.unibo.it/en/teaching/course-unit-catalogue/course-unit/2018/384267
 
 ## About the simulator
 ARGoS — http://www.argos-sim.info
