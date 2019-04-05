@@ -1,7 +1,7 @@
 # Robotics experiments
 
 ## About the course
-These are my lab experiments from the Intelligent Robotics Systems course by professor Andrea Roli.
+This is a colleciton of my lab experiments from the Intelligent Robotic Systems course by professor Andrea Roli.
 
 Link to the course: https://www.unibo.it/en/teaching/course-unit-catalogue/course-unit/2018/384267
 
