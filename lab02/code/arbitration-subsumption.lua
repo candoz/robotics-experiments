@@ -1,10 +1,12 @@
 MAX_WHEEL_SPEED = 10
 SLOW_WHEEL_SPEED = 2
+
 PROXIMITY_THRESHOLD = 0.05
 SATISFIED_LIGHT_VALUE = 0.35 -- change this value accordingly to the light height
 
 function init()
   robot.leds.set_all_colors("black")
+
 end
 
 function step()
@@ -22,6 +24,7 @@ end
 
 function go_straight()
   robot.wheels.set_velocity(MAX_WHEEL_SPEED, MAX_WHEEL_SPEED)
+  log("Going straight ahead, full speed!")
 end
 
 function follow_the_light() -- otherwise go straight
@@ -33,10 +36,14 @@ function follow_the_light() -- otherwise go straight
     if between(light_direction, -math.pi, -math.pi/2) then sign_r = -1 else sign_r = 1 end
     mod_l = 1 - math.sin(light_direction)
     mod_r = 1 + math.sin(light_direction)
+
+    log("Mods:" .. mod_l .. "|" .. mod_r)
+
     k_norm = MAX_WHEEL_SPEED / math.max(mod_l, mod_r)
     speed_l = sign_l * mod_l * k_norm
     speed_r = sign_r * mod_r * k_norm
     robot.wheels.set_velocity(speed_l, speed_r)
+    log("Following the light, wheel speeds -> L:" .. math.floor(speed_l*100)/100 .. " R:" .. math.floor(speed_r*100)/100)
   end
 end
 
@@ -47,11 +54,11 @@ function avoid_crash() -- otherwise follow the light
     left_proximities, right_proximities = get_proximities_left_right()
 
     if left_proximities > right_proximities then
-      log("Trying to avoid an obstacle on the LEFT")
       robot.wheels.set_velocity(MAX_WHEEL_SPEED, SLOW_WHEEL_SPEED)
+      log("Avoiding an obstacle on the LEFT")
     else
-      log("Trying to avoid an obstacle on the RIGHT")
       robot.wheels.set_velocity(SLOW_WHEEL_SPEED, MAX_WHEEL_SPEED)
+      log("Avoiding an obstacle on the RIGHT")
     end
   end
 end

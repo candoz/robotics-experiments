@@ -50,24 +50,24 @@
       <body position="0,1.9,0" orientation="0,0,0" />
     </box>
 
-    <light id="light"
+    <!-- <light id="light-center"
            position="0,0,0.5"
-           orientation="0,0,0"
-           color="yellow"
-           intensity="1"
-           medium="leds"/>
-
-    <!-- <light id="light2"
-           position="1,1,0.5"
            orientation="0,0,0"
            color="yellow"
            intensity="1"
            medium="leds"/> -->
 
+    <light id="light-top-left"
+           position="1,1,0.5"
+           orientation="0,0,0"
+           color="yellow"
+           intensity="1"
+           medium="leds"/>
+
     <distribute>
       <position method="uniform" min="-2,-2,0" max="2,2,0" />
       <orientation method="uniform" min="0,0,0" max="360,0,0" />
-      <entity quantity="30" max_trials="100">
+      <entity quantity="35" max_trials="100">
         <box id="o" size="0.2, 0.2, 0.2" movable="false" />
       </entity>
     </distribute>
