@@ -2,15 +2,15 @@
 
 HIGH_VELOCITY = 10
 LOW_VELOCITY = 6
-VERY_LOW_VELOCITY = 3
+VERY_LOW_VELOCITY = 2
 
 PROXIMITY_THRESHOLD = 0.05
 
-NEAR_THE_LIGHT = 1.0 -- change this value accordingly to the light height
-UNDER_THE_LIGHT = 1.5 -- change this value accordingly to the light height
+NEAR_THE_LIGHT = 0.8 -- change this value accordingly to the light height
+UNDER_THE_LIGHT = 1.55 -- change this value accordingly to the light height
 
 DEFAULT_STEPS_RESOLUTION = 5
-CRITICAL_STEPS_RESOLUTION = 25
+CRITICAL_STEPS_RESOLUTION = 20
 
 n_steps = 0
 steps_resolution = DEFAULT_STEPS_RESOLUTION
@@ -72,6 +72,7 @@ function step()
           or (contains({3,4}, move_towards_quadrant) and (contains(blocked_quadrants, 3) or contains(blocked_quadrants, 3)))
           or light_intensities[priority_quadrants[1]] >= NEAR_THE_LIGHT then
         low_v = VERY_LOW_VELOCITY
+        log("Steering sharply...")
       else
         low_v = LOW_VELOCITY
       end
