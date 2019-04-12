@@ -23,13 +23,13 @@
 	<leds implementation="default" medium="leds" />
       </actuators>
       <sensors>
-        <differential_steering implementation="default" noise_level="0.0" />
+        <differential_steering implementation="default" noise_level="0.5" />
         <footbot_proximity implementation="default" show_rays="true" noise_level="0.0" />
         <footbot_light implementation="rot_z_only" show_rays="true" noise_level="0.0" />
 	<footbot_motor_ground implementation="rot_z_only" noise_level="0.0" />
 	<positioning implementation="default" noise_level="0.0" />
       </sensors>
-      <params script="beginning.lua" />
+      <params script="fusion-motor-schema.lua" />
     </lua_controller>
  
   </controllers>
@@ -39,7 +39,7 @@
   <!-- * Arena configuration * -->
   <!-- *********************** -->
   <arena size="4, 4, 1" center="0,0,0.5" positional_grid_size="8,8,1">
-	<floor id="f" source="image" path="four_spots.png" />
+	<floor id="f" source="image" path="plain-grey-terrain.png" />
     <box id="bn" size="0.1, 4, 0.2" movable="false">
       <body position="1.9, 0, 0"  orientation="0,0,0" />
     </box>
@@ -60,7 +60,7 @@
            intensity="1"
            medium="leds"/>
     
-    <!-- <light id="light2"
+    <!-- <light id="light"
            position="1,1,0.5"
            orientation="0,0,0"
            color="yellow"
@@ -75,12 +75,10 @@
       </entity>
     </distribute>
     
-    
-   <!-- <foot-bot id="fb">
+    <!-- <foot-bot id="fb">
       <controller config="lua" />
       <body position="0.2,0.3,0" orientation="0,0,0" />
     </foot-bot> -->
-
 
     <!-- If you want to place the robot in a random position you may want to use this piece of code -->
     <distribute>

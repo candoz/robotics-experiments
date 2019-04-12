@@ -8,7 +8,6 @@ function vector.vec2_sum(v1, v2)
 	return v3	
 end
 
-
 -- From polar to cartesian coordinates
 function vector.polar_to_cart(v)
 	local z = {x = v.length * math.cos(v.angle) , y = v.length * math.sin(v.angle)}
@@ -39,7 +38,6 @@ function vector.vec2_new_polar(length, angle)
    }
    return vec2
 end
-
 
 -- Summing two 2D vectors in polar coordinates
 function vector.vec2_polar_sum(v1, v2)

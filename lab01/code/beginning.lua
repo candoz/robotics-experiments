@@ -1,119 +1,152 @@
 -- Put your global variables here
 
-MOVE_STEPS = 10
+HIGH_VELOCITY = 10
+LOW_VELOCITY = 6
+VERY_LOW_VELOCITY = 3
+DEFAULT_STEPS_RESOLUTION = 5
+CRITICAL_STEPS_RESOLUTION = 25
+PROXIMITY_THRESHOLD = 0.05
 n_steps = 0
+steps_resolution = DEFAULT_STEPS_RESOLUTION
+move_towards_quadrant = 1 -- arbitrary value the first time ...
 
-
---[[ This function is executed every time you press the 'execute'
-     button ]]
+--[[ Function executed every time you press the 'execute' button. ]]
 function init()
-    n_steps = 0
-	robot.leds.set_all_colors("black")
-    
+  robot.leds.set_all_colors("black")
+end
+
+--[[ Function executed at each time step.
+     It must contain the logic of your controller. ]]
+function step()
+  if n_steps % steps_resolution == 0 then
     max_intensity = 0
     max_light_sensor_index = 1
-end
+    light_intensities = total_values_per_quadrant(robot.light)
+    proximities = total_values_per_quadrant(robot.proximity)
 
-function getKeysSortedByValue(tbl,sortFunc)
-    local keys = {}
-    for key in pairs(tbl) do table.insert(keys,key) end
-    table.sort(keys, function(a,b) return sortFunc(tbl[a], tbl[b]) end)
-    return keys
-end
+    if seeing_some_light() then
+      priority_quadrants = keys_sorted_by_value(light_intensities, function(a, b) return a > b end)
+    elseif move_towards_quadrant == 1 or move_towards_quadrant == 2 then -- was moving forwards
+      priority_quadrants = table_concat(shuffle({1,2}), shuffle({3,4})) -- continue to move forwards randomly
+    else -- was moving backwards
+      priority_quadrants = table_concat(shuffle({3,4}), shuffle({1,2})) -- continue to move backwards randomly
+    end
 
-function step()
+    anti_priority_quadrants = keys_sorted_by_value(proximities, function(a, b) return a > b end)
+
+    if light_intensities[priority_quadrants[1]] >= 1.5 then -- stop the robot (change this value if you change the light height)
+      robot.wheels.set_velocity(0, 0)
+      log("Under the light :)")
     
-    n_steps = n_steps + 1
-	if n_steps % MOVE_STEPS == 0 then
-		max_intensity = 0
-        max_light_sensor_index = 1
-        
-        intensities = {0,0,0,0}
-        proximities = {0,0,0,0}
-        
-        for i=1,4 do
-            for k=1,6 do
-               intensities[5-i] = intensities[5-i] + robot.light[(i-1)*6+k].value
-               proximities[5-i] = proximities[5-i] + robot.proximity[(i-1)*6+k].value
-            end
+    else
+      blocked_quadrants = {}
+      for i=1,3 do -- don't want to block all 4 quadrants
+        if proximities[anti_priority_quadrants[i]] > PROXIMITY_THRESHOLD then 
+          table.insert(blocked_quadrants, anti_priority_quadrants[i])
         end
-        
-        log("intensities:")
-        log(intensities[1])
-        log(intensities[2])
-        log(intensities[3])
-        log(intensities[4])
+      end
+      
+      for _, blocked in ipairs(blocked_quadrants) do
+        log("Blocking quadrant " .. blocked)
+      end
 
-        priorities = getKeysSortedByValue(intensities, function(a,b) return a > b end)
-        anti_priorities = getKeysSortedByValue(proximities, function(a,b) return a > b end)
-        
-        blocked_quadrant = 0
-        if proximities[anti_priorities[1]] ~= 0 then 
-            blocked_quadrant = anti_priorities[1]
-        end
-        
-        priority_index = 1
-        
-        log("priorities[1] = " .. priorities[1])
-        log("blocked quadrant = " .. blocked_quadrant)
-        
-        for i=1,4 do
-            if priorities[i] ~= blocked_quadrant then
-                priority_index = priorities[i]
-                break
-            end
-        end
-        
-        log("moving towards quadrant: " .. priority_index)
-        
-        high_v = 8
-        low_v = 6
-        if blocked_quadrant ~= 0 then
-            low_v = 1
-        end
-        
-        if priority_index == 4 then
-            left_v = low_v
-            right_v = high_v
-        elseif priority_index == 3 then
-            left_v = -low_v
-            right_v = -high_v
-        elseif priority_index == 2 then
-            left_v = -high_v
-            right_v = -low_v
-        elseif priority_index == 1 then
-            left_v = high_v
-            right_v = low_v
-        end
-        
-        if intensities[priorities[1]] >= 1.3 then
-            left_v = 0
-            right_v = 0
-        end
-        
-        robot.wheels.set_velocity(left_v,right_v)
-	end
+      low_v = LOW_VELOCITY
+      steps_resolution = DEFAULT_STEPS_RESOLUTION
 
+      for _, best_quadrant in ipairs(priority_quadrants) do
+        if not contains(blocked_quadrants, best_quadrant) then
+          move_towards_quadrant = best_quadrant
+          log("Moving towards quadrant: " .. move_towards_quadrant)
+          break
+        else -- the preferred way is blocked!
+          low_v = VERY_LOW_VELOCITY
+          steps_resolution = CRITICAL_STEPS_RESOLUTION
+        end
+      end
+
+      quadrant_to_velocities = {
+        [1] = function () return HIGH_VELOCITY, low_v end,
+        [2] = function () return low_v, HIGH_VELOCITY end,
+        [3] = function () return -low_v, -HIGH_VELOCITY end,
+        [4] = function () return -HIGH_VELOCITY, -low_v end,
+      }
+
+      robot.wheels.set_velocity(quadrant_to_velocities[move_towards_quadrant]())
+    end
+  end
+  n_steps = n_steps + 1
 end
 
-
-
---[[ This function is executed every time you press the 'reset'
-     button in the GUI. It is supposed to restore the state
-     of the controller to whatever it was right after init() was
-     called. The state of sensors and actuators is reset
-     automatically by ARGoS. ]]
+--[[ Function executed every time you press the 'reset' button in the GUI.
+     It is supposed to restore the state of the controller to whatever it was
+     right after init() was called. The state of sensors and actuators is
+     reset automatically by ARGoS. ]]
 function reset()
-	left_v = robot.random.uniform(0,15)
-	right_v = robot.random.uniform(0,15)
-	robot.wheels.set_velocity(left_v,right_v)
-	n_steps = 0
-	robot.leds.set_all_colors("black")
+  n_steps = 0
 end
 
-
---[[ This function is executed only once, when the robot is removed
-     from the simulation ]]
+--[[ Function executed only once, when the robot is removed from the simulation. ]]
 function destroy()
-   -- put your code here
+end
+
+-- My utils
+
+function between(value, min, max)
+  if value > min and value < max then return true end
+  return false
+end
+
+function keys_sorted_by_value(tbl, sortFunc)
+  local keys = {}
+  for key in pairs(tbl) do table.insert(keys, key) end
+  table.sort(keys, function(a,b) return sortFunc(tbl[a], tbl[b]) end)
+  return keys
+end
+
+function contains (tbl, val)
+  for _, value in pairs(tbl) do
+    if value == val then
+      return true
+    end
+  end
+  return false
+end
+
+function shuffle (tbl)
+  shuffled = {}
+  for i, v in ipairs(tbl) do
+    local pos = robot.random.uniform_int(1, #shuffled + 1) -- [min, max)
+    table.insert(shuffled, pos, v)
+  end
+  return shuffled
+end
+
+function table_concat(t1,t2)
+  for i=1,#t2 do
+      t1[#t1+1] = t2[i]
+  end
+  return t1
+end
+
+function total_values_per_quadrant(sensors)
+  values = {0,0,0,0}
+  for _, sensor in pairs(sensors) do
+    if between(sensor.angle, -math.pi/2, 0) then 
+      values[1] = values[1] + sensor.value
+    elseif between(sensor.angle, 0, math.pi/2) then
+      values[2] = values[2] + sensor.value
+    elseif between(sensor.angle, math.pi/2, math.pi) then
+      values[3] = values[3] + sensor.value
+    elseif between(sensor.angle, 0, -math.pi, -math.pi/2) then
+      values[4] = values[4] + sensor.value
+    end
+  end
+  return values
+end
+
+function seeing_some_light()
+  for _, light_sensor in pairs(robot.light) do
+    if light_sensor.value > 0 then return true end
+  end
+  return false
 end
