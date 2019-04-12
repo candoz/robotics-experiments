@@ -1,16 +1,14 @@
-local utils = require("utils")
-
 MAX_WHEEL_SPEED = 10
 SLOW_WHEEL_SPEED = 2
 PROXIMITY_THRESHOLD = 0.05
-SATISFIED_LIGHT_VALUE = 1.5 -- change this value accordingly to the light height
+SATISFIED_LIGHT_VALUE = 0.35 -- change this value accordingly to the light height
 
 function init()
   robot.leds.set_all_colors("black")
 end
 
 function step()
-  avoid_crash() -- otherwise follow the light, or go straight if you're in the dark ...
+  stand_still() -- this naming upsets me deeply ...
 end
 
 function reset()
@@ -22,16 +20,8 @@ end
 
 -- Behaviours:
 
-function stand_still()
-  robot.wheels.set_velocity(0,0)
-end
-
 function go_straight()
-  if get_sensor_with_highest_value(robot.light).value >= SATISFIED_LIGHT_VALUE then
-    stand_still()
-  else
-    robot.wheels.set_velocity(MAX_WHEEL_SPEED, MAX_WHEEL_SPEED)
-  end
+  robot.wheels.set_velocity(MAX_WHEEL_SPEED, MAX_WHEEL_SPEED)
 end
 
 function follow_the_light() -- otherwise go straight
@@ -56,10 +46,6 @@ function avoid_crash() -- otherwise follow the light
   else
     left_proximities, right_proximities = get_proximities_left_right()
 
-    -- total_proximities_ahead = left_proximities + right_proximities
-    -- delta = total_proximities_ahead * (MAX_WHEEL_SPEED/2) / MAX_PROXIMITIES_AHEAD -- normalizing total value
-    -- slow_wheel_speed = MAX_WHEEL_SPEED/2 - delta
-    -- fast_wheel_speed = MAX_WHEEL_SPEED/2 + delta
     if left_proximities > right_proximities then
       log("Trying to avoid an obstacle on the LEFT")
       robot.wheels.set_velocity(MAX_WHEEL_SPEED, SLOW_WHEEL_SPEED)
@@ -67,6 +53,15 @@ function avoid_crash() -- otherwise follow the light
       log("Trying to avoid an obstacle on the RIGHT")
       robot.wheels.set_velocity(SLOW_WHEEL_SPEED, MAX_WHEEL_SPEED)
     end
+  end
+end
+
+function stand_still()
+  if get_sensor_with_highest_value(robot.light).value >= SATISFIED_LIGHT_VALUE then
+    robot.wheels.set_velocity(0, 0)
+    log("Arrived :)")
+  else
+    avoid_crash()
   end
 end
 
