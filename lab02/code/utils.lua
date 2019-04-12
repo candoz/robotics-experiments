@@ -1,3 +1,5 @@
+local utils = {}
+
 --[[ Returns true if value is between min and max, false otherwise. ]]
 function between(value, min, max)
   if value > min and value < max then return true end
@@ -49,3 +51,5 @@ function get_proximities_left_right()
   end
   return left, right
 end
+
+return utils

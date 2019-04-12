@@ -1,5 +1,4 @@
-package.path = "../../utils.lua;" .. package.path
-utils = require("utils")
+local utils = require("utils")
 
 MAX_WHEEL_SPEED = 10
 
@@ -8,7 +7,7 @@ function init()
 end
 
 function step()
-  avoid_crash()
+  avoid_crash() -- otherwise follow the light, or go straight if you're in the dark ...
 end
 
 function reset()
@@ -28,7 +27,7 @@ end
 
 function follow_the_light() -- otherwise go straight
   if not seeing_some_light() then
-    wander()
+    go_straight()
   else
     light_direction = get_brightest_light_sensor().angle
     if between(light_direction, math.pi/2, math.pi) then sign_l = -1 else sign_l = 1 end
