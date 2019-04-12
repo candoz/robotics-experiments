@@ -3,9 +3,15 @@
 HIGH_VELOCITY = 10
 LOW_VELOCITY = 6
 VERY_LOW_VELOCITY = 3
+
+PROXIMITY_THRESHOLD = 0.05
+
+NEAR_THE_LIGHT = 1.0 -- change this value accordingly to the light height
+UNDER_THE_LIGHT = 1.5 -- change this value accordingly to the light height
+
 DEFAULT_STEPS_RESOLUTION = 5
 CRITICAL_STEPS_RESOLUTION = 25
-PROXIMITY_THRESHOLD = 0.05
+
 n_steps = 0
 steps_resolution = DEFAULT_STEPS_RESOLUTION
 move_towards_quadrant = 1 -- arbitrary value the first time ...
@@ -26,7 +32,7 @@ function step()
 
     if seeing_some_light() then
       priority_quadrants = keys_sorted_by_value(light_intensities, function(a, b) return a > b end)
-    elseif move_towards_quadrant == 1 or move_towards_quadrant == 2 then -- was moving forwards
+    elseif contains({1,2}, move_towards_quadrant) then -- was moving forwards
       priority_quadrants = table_concat(shuffle({1,2}), shuffle({3,4})) -- continue to move forwards randomly
     else -- was moving backwards
       priority_quadrants = table_concat(shuffle({3,4}), shuffle({1,2})) -- continue to move backwards randomly
@@ -34,7 +40,7 @@ function step()
 
     anti_priority_quadrants = keys_sorted_by_value(proximities, function(a, b) return a > b end)
 
-    if light_intensities[priority_quadrants[1]] >= 1.5 then -- stop the robot (change this value if you change the light height)
+    if light_intensities[priority_quadrants[1]] >= UNDER_THE_LIGHT then -- stop the robot
       robot.wheels.set_velocity(0, 0)
       log("Under the light :)")
     
@@ -50,7 +56,6 @@ function step()
         log("Blocking quadrant " .. blocked)
       end
 
-      low_v = LOW_VELOCITY
       steps_resolution = DEFAULT_STEPS_RESOLUTION
 
       for _, best_quadrant in ipairs(priority_quadrants) do
@@ -59,9 +64,16 @@ function step()
           log("Moving towards quadrant: " .. move_towards_quadrant)
           break
         else -- the preferred way is blocked!
-          low_v = VERY_LOW_VELOCITY
           steps_resolution = CRITICAL_STEPS_RESOLUTION
         end
+      end
+
+      if (contains({1,2}, move_towards_quadrant) and (contains(blocked_quadrants, 1) or contains(blocked_quadrants, 2))) 
+          or (contains({3,4}, move_towards_quadrant) and (contains(blocked_quadrants, 3) or contains(blocked_quadrants, 3)))
+          or light_intensities[priority_quadrants[1]] >= NEAR_THE_LIGHT then
+        low_v = VERY_LOW_VELOCITY
+      else
+        low_v = LOW_VELOCITY
       end
 
       quadrant_to_velocities = {
