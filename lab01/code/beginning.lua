@@ -78,10 +78,10 @@ function step()
       end
 
       quadrant_to_velocities = {
-        [1] = function () return HIGH_VELOCITY, low_v end,
-        [2] = function () return low_v, HIGH_VELOCITY end,
-        [3] = function () return -low_v, -HIGH_VELOCITY end,
-        [4] = function () return -HIGH_VELOCITY, -low_v end,
+        [1] = function () return low_v, HIGH_VELOCITY end,
+        [2] = function () return -low_v, -HIGH_VELOCITY end,
+        [3] = function () return -HIGH_VELOCITY, -low_v end,
+        [4] = function () return HIGH_VELOCITY, low_v end,
       }
 
       robot.wheels.set_velocity(quadrant_to_velocities[move_towards_quadrant]())
@@ -144,13 +144,13 @@ end
 function total_values_per_quadrant(sensors)
   values = {0,0,0,0}
   for _, sensor in pairs(sensors) do
-    if between(sensor.angle, -math.pi/2, 0) then 
+    if between(sensor.angle, 0, math.pi/2) then 
       values[1] = values[1] + sensor.value
-    elseif between(sensor.angle, 0, math.pi/2) then
-      values[2] = values[2] + sensor.value
     elseif between(sensor.angle, math.pi/2, math.pi) then
+      values[2] = values[2] + sensor.value
+    elseif between(sensor.angle, -math.pi, -math.pi/2) then
       values[3] = values[3] + sensor.value
-    elseif between(sensor.angle, 0, -math.pi, -math.pi/2) then
+    elseif between(sensor.angle, -math.pi/2, 0) then
       values[4] = values[4] + sensor.value
     end
   end
