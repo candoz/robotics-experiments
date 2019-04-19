@@ -1,10 +1,11 @@
 MAX_WHEEL_SPEED = 10
 SLOW_WHEEL_SPEED = 2
 
-PROXIMITY_THRESHOLD = 0.02
+PROXIMITY_THRESHOLD = 0.01
 SATISFIED_LIGHT_VALUE = 0.35 -- change this value accordingly to the light height
 
 highest_light_sensor = nil
+highest_proximity_sensor = nil
 
 function init()
   robot.leds.set_all_colors("black")
@@ -32,9 +33,7 @@ function go_straight()
 end
 
 function follow_the_light() -- otherwise go straight
-  if highest_light_sensor.value == 0 then
-    go_straight()
-  else
+  if highest_light_sensor.value > 0 then
     if between(highest_light_sensor.angle, math.pi/2, math.pi) then sign_l = -1 else sign_l = 1 end
     if between(highest_light_sensor.angle, -math.pi, -math.pi/2) then sign_r = -1 else sign_r = 1 end
     mod_l = 1 - math.sin(highest_light_sensor.angle)
@@ -44,6 +43,8 @@ function follow_the_light() -- otherwise go straight
     speed_r = sign_r * mod_r * k_norm
     robot.wheels.set_velocity(speed_l, speed_r)
     log("Following the light -> L:" .. math.floor(speed_l*100)/100 .. " R:" .. math.floor(speed_r*100)/100)
+  else
+    go_straight()
   end
 end
 
@@ -70,18 +71,14 @@ function coast_border() -- otherwise follow the light
 end
 
 function avoid_crash() -- otherwise follow the light
-  if not sensing_obstacles_ahead(PROXIMITY_THRESHOLD) then
-    follow_the_light()
+  if highest_proximity_sensor.value > PROXIMITY_THRESHOLD and between(highest_proximity_sensor.angle, 0, math.pi*2) then
+    robot.wheels.set_velocity(MAX_WHEEL_SPEED, SLOW_WHEEL_SPEED)
+    log("Avoiding an obstacle on the LEFT")
+  elseif highest_proximity_sensor.value > PROXIMITY_THRESHOLD and between(highest_proximity_sensor.angle, -math.pi/2, 0) then
+    robot.wheels.set_velocity(SLOW_WHEEL_SPEED, MAX_WHEEL_SPEED)
+    log("Avoiding an obstacle on the RIGHT")
   else
-    left_proximities, right_proximities = get_proximities_left_right()
-
-    if left_proximities > right_proximities then
-      robot.wheels.set_velocity(MAX_WHEEL_SPEED, SLOW_WHEEL_SPEED)
-      log("Avoiding an obstacle on the LEFT")
-    else
-      robot.wheels.set_velocity(SLOW_WHEEL_SPEED, MAX_WHEEL_SPEED)
-      log("Avoiding an obstacle on the RIGHT")
-    end
+    follow_the_light()
   end
 end
 
