@@ -18,9 +18,6 @@ function step()
   res1 = vector.vec2_polar_sum(random_ahead(), light_attraction())
   res2 = vector.vec2_polar_sum(obstacle_repulsion(), obstacle_tangential())
   res = vector.vec2_polar_sum(res1, res2)
-
-  res.value = 10
-
   vel_l, vel_r = motor_conversions.vec_to_vels(res, robot.wheels.axis_length)
   robot.wheels.set_velocity(vel_l, vel_r)
 end
