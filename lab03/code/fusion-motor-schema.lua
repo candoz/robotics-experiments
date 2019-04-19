@@ -2,8 +2,12 @@ local vector = require "vector"
 local motor_conversions = require "motor_conversions"
 
 PREFERRED_MAX_WHEEL_SPEED = 10
-COEFF_RANDOM_AHEAD = 4
-COEFF_LIGHT_ATTRACTION = 10
+PROXIMITY_DANGER = 0.5
+
+COEFF_RANDOM_AHEAD = 3
+COEFF_LIGHT_ATTRACTION = 5
+COEFF_OBSTACLE_REPULSION = 5
+COEFF_OBSTACLE_TANGENTIAL = 8
 
 function init()
   n_steps = 0
@@ -11,8 +15,13 @@ function init()
 end
 
 function step()
-  resultant = vector.vec2_polar_sum(random_ahead(), light_attraction())
-  vel_l, vel_r = motor_conversions.vec_to_vels(resultant, robot.wheels.axis_length)
+  res1 = vector.vec2_polar_sum(random_ahead(), light_attraction())
+  res2 = vector.vec2_polar_sum(obstacle_repulsion(), obstacle_tangential())
+  res = vector.vec2_polar_sum(res1, res2)
+
+  res.value = 10
+
+  vel_l, vel_r = motor_conversions.vec_to_vels(res, robot.wheels.axis_length)
   robot.wheels.set_velocity(vel_l, vel_r)
 end
 
@@ -33,13 +42,33 @@ end
 
 function light_attraction()
   local sensor = get_sensor_with_highest_value(robot.light)
-  local force = 0
+  local mod = 0
   if sensor.value > 0 then 
-    force = 1 - sensor.value -- 1 - sigmoid((sensor.value - 0.5) * 3)
+    mod = 1 - sensor.value -- 1 - sigmoid((sensor.value - 0.5) * 3)
   end
   return {
-    length = force * COEFF_LIGHT_ATTRACTION,
+    length = mod * COEFF_LIGHT_ATTRACTION,
     angle = sensor.angle
+  }
+end
+
+function obstacle_repulsion()
+  local sensor = get_sensor_with_highest_value(robot.proximity)
+  local mod = 0
+  if sensor.value > PROXIMITY_DANGER then
+    mod = sensor.value * COEFF_OBSTACLE_REPULSION
+  end
+  return {
+    length = mod,
+    angle = sensor.angle + math.pi
+  }
+end
+
+function obstacle_tangential()
+  local sensor = get_sensor_with_highest_value(robot.proximity)
+  return {
+    length = sensor.value * COEFF_OBSTACLE_TANGENTIAL,
+    angle = sensor.angle + math.pi/2 -- avoiding to the left
   }
 end
 
