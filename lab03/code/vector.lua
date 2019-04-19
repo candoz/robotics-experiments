@@ -5,7 +5,7 @@ function vector.vec2_sum(v1, v2)
   local v3 = {x = 0 , y = 0}	
   v3.x = v1.x + v2.x
   v3.y = v1.y + v2.y
-  return v3	
+  return v3
 end
 
 -- From polar to cartesian coordinates
@@ -45,7 +45,7 @@ function vector.vec2_polar_sum(v1, v2)
   local w2 = vector.polar_to_cart(v2)
   local w3 = vector.vec2_sum(w1,w2)
   local v3 = vector.cart_to_polar(w3)	
-  return v3	
+  return v3
 end
 
 return vector
