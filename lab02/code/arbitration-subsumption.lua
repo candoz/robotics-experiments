@@ -9,7 +9,6 @@ highest_proximity_sensor = nil
 
 function init()
   robot.leds.set_all_colors("black")
-
 end
 
 function step()
@@ -71,7 +70,7 @@ function coast_border() -- otherwise follow the light
 end
 
 function avoid_crash() -- otherwise follow the light
-  if highest_proximity_sensor.value > PROXIMITY_THRESHOLD and between(highest_proximity_sensor.angle, 0, math.pi*2) then
+  if highest_proximity_sensor.value > PROXIMITY_THRESHOLD and between(highest_proximity_sensor.angle, 0, math.pi/2) then
     robot.wheels.set_velocity(MAX_WHEEL_SPEED, SLOW_WHEEL_SPEED)
     log("Avoiding an obstacle on the LEFT")
   elseif highest_proximity_sensor.value > PROXIMITY_THRESHOLD and between(highest_proximity_sensor.angle, -math.pi/2, 0) then
