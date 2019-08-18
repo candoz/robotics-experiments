@@ -29,6 +29,7 @@ end
 function go_straight()
   robot.wheels.set_velocity(MAX_WHEEL_SPEED, MAX_WHEEL_SPEED)
   log("Going straight ahead, full speed!")
+  log("SENSOR ANGLE: " .. highest_proximity_sensor.angle)
 end
 
 function follow_the_light() -- otherwise go straight
@@ -47,35 +48,29 @@ function follow_the_light() -- otherwise go straight
   end
 end
 
-function coast_border() -- otherwise follow the light
+function avoid_lateral_obstacle() -- otherwise follow the light
   if highest_proximity_sensor.value > PROXIMITY_THRESHOLD
-      and between(highest_proximity_sensor.angle, math.pi/2, math.pi*7/8)
-      and (highest_light_sensor.value == 0 or between(highest_light_sensor.angle, 0, math.pi)) then
-    l = 1 + math.cos(highest_proximity_sensor.angle)
-    r = 1 - math.cos(highest_proximity_sensor.angle)
-    k_norm = MAX_WHEEL_SPEED / math.max(l, r)
-    robot.wheels.set_velocity(l * k_norm, r * k_norm)
-    log("Coasting a wall on the LEFT -> L:" .. math.floor(l*k_norm*100)/100 .. " R:" .. math.floor(r*k_norm*100)/100)
+      and between(highest_proximity_sensor.angle, 0, math.pi/2) then
+    robot.wheels.set_velocity(MAX_WHEEL_SPEED, SLOW_WHEEL_SPEED)
+    log("Avoiding an obstacle turning RIGHT")
   elseif highest_proximity_sensor.value > PROXIMITY_THRESHOLD
-      and between(highest_proximity_sensor.angle, -math.pi*7/8, -math.pi/2)
-      and (highest_light_sensor.value == 0 or between(highest_light_sensor.angle, -math.pi, 0)) then
-    l = 1 - math.cos(highest_proximity_sensor.angle)
-    r = 1 + math.cos(highest_proximity_sensor.angle)
-    k_norm = MAX_WHEEL_SPEED / math.max(l, r)
-    robot.wheels.set_velocity(l * k_norm, r * k_norm)
-    log("Coasting a wall on the LEFT -> L:" .. math.floor(l*k_norm*100)/100 .. " R:" .. math.floor(r*k_norm*100)/100)
+      and between(highest_proximity_sensor.angle, -math.pi/2, 0) then
+    robot.wheels.set_velocity(SLOW_WHEEL_SPEED, MAX_WHEEL_SPEED)
+    log("Avoiding an obstacle turning LEFT")
   else
     follow_the_light()
   end
 end
 
-function avoid_crash() -- otherwise follow the light
-  if highest_proximity_sensor.value > PROXIMITY_THRESHOLD and between(highest_proximity_sensor.angle, 0, math.pi/2) then
+function avoid_frontal_crash() -- otherwise follow the light
+  if highest_proximity_sensor.value > PROXIMITY_THRESHOLD
+      and between(highest_proximity_sensor.angle, 0, math.pi/2) then
     robot.wheels.set_velocity(MAX_WHEEL_SPEED, SLOW_WHEEL_SPEED)
-    log("Avoiding an obstacle on the LEFT")
-  elseif highest_proximity_sensor.value > PROXIMITY_THRESHOLD and between(highest_proximity_sensor.angle, -math.pi/2, 0) then
+    log("Avoiding an obstacle turning RIGHT")
+  elseif highest_proximity_sensor.value > PROXIMITY_THRESHOLD
+      and between(highest_proximity_sensor.angle, -math.pi/2, 0) then
     robot.wheels.set_velocity(SLOW_WHEEL_SPEED, MAX_WHEEL_SPEED)
-    log("Avoiding an obstacle on the RIGHT")
+    log("Avoiding an obstacle turning LEFT")
   else
     follow_the_light()
   end
@@ -102,7 +97,7 @@ end
 function get_sensor_with_highest_value(sensors)
   highest = nil
   for _, sensor in pairs(sensors) do
-    if highest == nil or highest.value < sensor.value then 
+    if highest == nil or highest.value <= sensor.value then 
       highest = sensor
     end
   end
